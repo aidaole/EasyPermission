@@ -9,7 +9,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -24,10 +23,34 @@ object EasyPermission {
 
     private val permissionRequests = mutableMapOf<Fragment, EasyPermissionItem>()
 
+    /**
+     * 检查是否所有权限
+     *
+     * @param activity
+     * @param permissions
+     * @return
+     */
     fun checkPermissions(activity: FragmentActivity, permissions: Array<out String>): Boolean {
-        return isAllGranted(activity, permissions)
+        val granted = getAllPermissionStates(activity, permissions)
+        var allPermissionGranted = true
+        granted.forEach {
+            if (it != PackageManager.PERMISSION_GRANTED) {
+                allPermissionGranted = false
+            }
+        }
+        return allPermissionGranted
     }
 
+    /**
+     * 请求权限
+     *
+     * @param activity
+     * @param requestCode
+     * @param text
+     * @param permissions
+     * @param onPermissionResult
+     * @receiver
+     */
     fun requestPermission(
         activity: FragmentActivity,
         requestCode: Int,
@@ -35,7 +58,7 @@ object EasyPermission {
         permissions: Array<String>,
         onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
     ) {
-        val allPermissionGranted = isAllGranted(activity, permissions)
+        val allPermissionGranted = checkPermissions(activity, permissions)
         if (allPermissionGranted) {
             "requestPermission-> 所有权限都有了".logi(TAG)
             onPermissionResult.invoke(
@@ -81,18 +104,46 @@ object EasyPermission {
         ActivityCompat.requestPermissions(activity, permissions, requestCode)
     }
 
-    private fun <K, V> Map<K, V>.findByValue(value: V): K? {
-        return entries.find { it.value == value }?.key
-    }
-
-    private fun isAllGranted(activity: Activity, permissions: Array<out String>): Boolean {
-        var allPermissionGranted = true
-        permissions.forEach {
-            if (ActivityCompat.checkSelfPermission(activity, it) != PackageManager.PERMISSION_GRANTED) {
-                allPermissionGranted = false
+    /**
+     * 请求sdcard权限，这个比较特殊，需要适配
+     *
+     * @param activity
+     * @param requestCode
+     * @param text
+     * @param onPermissionResult
+     * @receiver
+     */
+    fun requestStoragePermission(
+        activity: FragmentActivity,
+        requestCode: Int,
+        text: String,
+        onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
+    ) {
+        "requestStoragePermission-> ".logi(TAG)
+        val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                makeRequestPermissionItem(activity, permissions, onPermissionResult)
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                activity.startActivity(intent)
+            } else {
+                onPermissionResult.invoke(permissions,
+                    IntArray(permissions.size).apply { fill(PackageManager.PERMISSION_GRANTED) })
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermission(
+                activity, requestCode, text, arrayOf(
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+            ) { permissions, granted ->
+                onPermissionResult.invoke(permissions, granted)
             }
         }
-        return allPermissionGranted
+    }
+
+
+    private fun <K, V> Map<K, V>.findByValue(value: V): K? {
+        return entries.find { it.value == value }?.key
     }
 
     private fun showDialog(
@@ -105,27 +156,15 @@ object EasyPermission {
             .show()
     }
 
-    fun onRequestPermissionsResult(
-        fragment: Fragment, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        removePermissionDescView(fragment)
-        permissionRequests[fragment]?.let {
-            it.onPermissionResult.invoke(permissions, grantResults)
-            permissionRequests.remove(fragment)
-        } ?: run {
-            "onRequestPermissionsResult-> 没有找到fragment: $fragment".logi(TAG)
-        }
-    }
-
     fun onResume(fragment: Fragment) {
         permissionRequests[fragment]?.let {
             removePermissionDescView(fragment)
+            "onResume-> 删除fragmetn: ${fragment.tag}".logi(TAG)
+            permissionRequests.remove(fragment)
+            fragment.requireActivity().supportFragmentManager.beginTransaction().remove(fragment).commit()
             it.onPermissionResult.invoke(
                 it.permissions, getAllPermissionStates(fragment.requireActivity(), it.permissions)
             )
-            "onResume-> 删除 ${fragment.tag}".logi(TAG)
-            permissionRequests.remove(fragment)
-            fragment.requireActivity().supportFragmentManager.beginTransaction().remove(fragment).commit()
         } ?: run {
             "onResume-> 没有找到对应fragment: $fragment".logi(TAG)
         }
@@ -133,7 +172,7 @@ object EasyPermission {
 
     private fun removePermissionDescView(fragment: Fragment) {
         val contentView = fragment.requireActivity().findViewById<FrameLayout>(android.R.id.content)
-        contentView?.removeView(contentView.findViewById<View>(R.id.permission_layout))
+        contentView?.removeView(contentView.findViewById(R.id.permission_layout))
     }
 
     private fun openSystemSetting(activity: Activity) {
@@ -165,34 +204,6 @@ object EasyPermission {
             }
         }
         return granted
-    }
-
-    fun requestStoragePermission(
-        activity: FragmentActivity,
-        requestCode: Int,
-        text: String,
-        onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
-    ) {
-        "checkStoragePermission: ".logi(TAG)
-        val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                makeRequestPermissionItem(activity, permissions, onPermissionResult)
-                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                activity.startActivity(intent)
-            } else {
-                onPermissionResult.invoke(permissions,
-                    IntArray(permissions.size).apply { fill(PackageManager.PERMISSION_GRANTED) })
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermission(
-                activity, requestCode, text, arrayOf(
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                )
-            ) { permissions, granted ->
-                onPermissionResult.invoke(permissions, granted)
-            }
-        }
     }
 
     private fun makeRequestPermissionItem(

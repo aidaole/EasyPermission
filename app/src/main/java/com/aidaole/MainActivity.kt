@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.aidaole.easypermission.EasyPermission
 import com.aidaole.easypermission.databinding.ActivityMainBinding
 import com.aidaole.ext.logi
+import com.aidaole.ext.toast
 import com.aidaole.files.FileScanner
 
 class MainActivity : AppCompatActivity() {
@@ -28,27 +29,32 @@ class MainActivity : AppCompatActivity() {
                 this, 12, "请求storage权限"
             ) { permissions, granted ->
                 if (isAllGranted(permissions, granted)) {
-                    "storageBtn-> 获取成功".logi(TAG)
+                    "文件权限-> 获取成功".toast(this)
                 } else {
-                    "storageBtn-> 获取失败".logi(TAG)
+                    "文件权限-> 获取失败".toast(this)
                 }
             }
         }
         layout.scanFileBtn.setOnClickListener {
-            "scanFileBtn-> ".logi(TAG)
-            scanFiles()
+            val hasPermission =
+                EasyPermission.checkPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+            if (hasPermission) {
+                scanFiles()
+            } else {
+                "没有storage权限".toast(this)
+            }
         }
         layout.callBtn.setOnClickListener {
             EasyPermission.requestPermission(
                 this,
                 10,
-                "我要请求权限",
+                "请求通话和短信权限",
                 arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS)
             ) { permissions, granted ->
                 if (isAllGranted(permissions, granted)) {
-                    "callBtn-> 获取成功".logi(TAG)
+                    "通话权限 获取成功".toast(this)
                 } else {
-                    "callBtn-> 获取失败".logi(TAG)
+                    "通话权限 获取失败".toast(this)
                 }
             }
         }
@@ -67,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                         locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)?.let {
                             val latitude = it.latitude
                             val longitude = it.longitude
-                            "locationBtn-> 地理位置: ${latitude}, $longitude".logi(TAG)
+                            "locationBtn-> 地理位置: ${latitude}, $longitude".toast(this)
                         } ?: run {
                             locationManager.requestLocationUpdates(
                                 LocationManager.NETWORK_PROVIDER,
@@ -76,21 +82,15 @@ class MainActivity : AppCompatActivity() {
                             ) {
                                 val latitude = it.latitude
                                 val longitude = it.longitude
-                                "locationBtn-> 地理位置: ${latitude}, $longitude".logi(TAG)
+                                "locationBtn-> 地理位置: ${latitude}, $longitude".toast(this)
                             }
                         }
                     }
                 } else {
-                    "locationBtn-> 没有权限".logi(TAG)
+                    "locationBtn-> 没有权限".toast(this)
                 }
             }
         }
-
-    }
-
-    override fun onPause() {
-        super.onPause()
-        "onPause-> ".logi(TAG)
     }
 
     private fun isAllGranted(permissions: Array<out String>, granted: IntArray): Boolean {
