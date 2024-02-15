@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/storage_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="请求sdcard权限"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/scan_file_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="扫描文件" />
+
+    <Button
+        android:id="@+id/call_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="请求电话权限"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/location_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="地理位置定位权限"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</LinearLayout>
