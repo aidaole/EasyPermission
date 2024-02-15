@@ -26,7 +26,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(layout.root)
         layout.storageBtn.setOnClickListener {
             EasyPermission.requestStoragePermission(
-                this, 12, "请求storage权限"
+                this, 12, "请求storage权限",
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
             ) { permissions, granted ->
                 if (isAllGranted(permissions, granted)) {
                     "文件权限-> 获取成功".toast(this)

@@ -110,6 +110,7 @@ object EasyPermission {
      * @param activity
      * @param requestCode
      * @param text
+     * @param requestPermissions
      * @param onPermissionResult
      * @receiver
      */
@@ -117,24 +118,23 @@ object EasyPermission {
         activity: FragmentActivity,
         requestCode: Int,
         text: String,
+        requestPermissions: Array<String>,
         onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
     ) {
         "requestStoragePermission-> ".logi(TAG)
-        val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            "requestStoragePermission-> api>30 请求所有文件权限".logi(TAG)
             if (!Environment.isExternalStorageManager()) {
-                makeRequestPermissionItem(activity, permissions, onPermissionResult)
+                makeRequestPermissionItem(activity, requestPermissions, onPermissionResult)
                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                 activity.startActivity(intent)
             } else {
-                onPermissionResult.invoke(permissions,
-                    IntArray(permissions.size).apply { fill(PackageManager.PERMISSION_GRANTED) })
+                onPermissionResult.invoke(requestPermissions,
+                    IntArray(requestPermissions.size).apply { fill(PackageManager.PERMISSION_GRANTED) })
             }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        } else {
             requestPermission(
-                activity, requestCode, text, arrayOf(
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                )
+                activity, requestCode, text, requestPermissions
             ) { permissions, granted ->
                 onPermissionResult.invoke(permissions, granted)
             }
@@ -184,8 +184,8 @@ object EasyPermission {
 
     private fun getAllPermissionStates(activity: FragmentActivity, permissions: Array<out String>): IntArray {
         val granted = IntArray(permissions.size)
-        permissions.forEachIndexed { index, s ->
-            when (s) {
+        permissions.forEachIndexed { index, permission ->
+            when (permission) {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.MANAGE_EXTERNAL_STORAGE -> {
@@ -193,13 +193,16 @@ object EasyPermission {
                         if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 Environment.isExternalStorageManager()
                             } else {
-                                ActivityCompat.checkSelfPermission(activity, s) == PackageManager.PERMISSION_GRANTED
+                                ActivityCompat.checkSelfPermission(
+                                    activity,
+                                    permission
+                                ) == PackageManager.PERMISSION_GRANTED
                             }
                         ) PackageManager.PERMISSION_GRANTED else PackageManager.PERMISSION_DENIED
                 }
 
                 else -> {
-                    granted[index] = ActivityCompat.checkSelfPermission(activity, s)
+                    granted[index] = ActivityCompat.checkSelfPermission(activity, permission)
                 }
             }
         }
