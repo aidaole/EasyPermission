@@ -1,20 +1,17 @@
 plugins {
-    id 'com.android.application'
+    id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
 }
 
 android {
-    namespace 'com.aidaole.easypermission'
+    namespace 'com.aidaole.lib.easypermission'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.aidaole.easypermission"
         minSdk 24
-        targetSdk 33
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
@@ -30,13 +27,9 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    viewBinding {
-        enable = true
-    }
 }
 
 dependencies {
-    implementation project(":lib_easypermission")
 
     implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'

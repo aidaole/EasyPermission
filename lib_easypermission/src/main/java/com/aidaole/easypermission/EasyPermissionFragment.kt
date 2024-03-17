@@ -1,7 +1,7 @@
 package com.aidaole.easypermission
 
 import androidx.fragment.app.Fragment
-import com.aidaole.ext.logi
+import com.aidaole.easypermission.ext.logi
 
 class EasyPermissionFragment : Fragment() {
     companion object {

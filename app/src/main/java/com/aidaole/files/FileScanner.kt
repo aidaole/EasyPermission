@@ -1,6 +1,6 @@
 package com.aidaole.files
 
-import com.aidaole.ext.logi
+import com.aidaole.easypermission.ext.logi
 import java.io.File
 
 class FileScanner {

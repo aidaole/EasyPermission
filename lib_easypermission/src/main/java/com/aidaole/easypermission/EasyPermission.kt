@@ -15,7 +15,8 @@ import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import com.aidaole.ext.logi
+import com.aidaole.easypermission.ext.logi
+import com.aidaole.lib.easypermission.R
 import java.util.UUID
 
 object EasyPermission {

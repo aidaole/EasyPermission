@@ -9,8 +9,8 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.aidaole.easypermission.EasyPermission
 import com.aidaole.easypermission.databinding.ActivityMainBinding
-import com.aidaole.ext.logi
-import com.aidaole.ext.toast
+import com.aidaole.easypermission.ext.logi
+import com.aidaole.easypermission.ext.toast
 import com.aidaole.files.FileScanner
 
 class MainActivity : AppCompatActivity() {
@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         }
         layout.scanFileBtn.setOnClickListener {
             val hasPermission =
-                EasyPermission.checkPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                com.aidaole.easypermission.EasyPermission.checkPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
             if (hasPermission) {
                 scanFiles()
             } else {
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         layout.callBtn.setOnClickListener {
-            EasyPermission.requestPermission(
+            com.aidaole.easypermission.EasyPermission.requestPermission(
                 this,
                 10,
                 "请求通话和短信权限",
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         }
         layout.locationBtn.setOnClickListener {
             val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            EasyPermission.requestPermission(
+            com.aidaole.easypermission.EasyPermission.requestPermission(
                 this, 101, "请求地理位置权限",
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
