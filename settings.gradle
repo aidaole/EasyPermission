@@ -16,5 +16,5 @@ dependencyResolutionManagement {
 
 
 rootProject.name = "EasyPermission"
-//include ':app'
+include ':app'
 include ':lib_easypermission'
