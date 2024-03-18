@@ -29,7 +29,18 @@ android {
         jvmTarget = '1.8'
     }
 }
-
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.aidaole'
+                artifactId = 'easypermission'
+                version = '1.0'
+            }
+        }
+    }
+}
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.9.0'
