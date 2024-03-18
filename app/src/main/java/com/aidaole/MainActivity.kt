@@ -9,8 +9,8 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.aidaole.easypermission.EasyPermission
 import com.aidaole.easypermission.databinding.ActivityMainBinding
-import com.aidaole.easypermission.ext.logi
-import com.aidaole.easypermission.ext.toast
+import com.aidaole.ext.logi
+import com.aidaole.ext.toast
 import com.aidaole.files.FileScanner
 
 class MainActivity : AppCompatActivity() {

@@ -1,4 +1,4 @@
-package com.aidaole.easypermission.ext
+package com.aidaole.ext
 
 import android.content.Context
 import android.widget.Toast
