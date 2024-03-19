@@ -1,5 +1,7 @@
 # EasyPermission
 
+[![](https://jitpack.io/v/aidaole/EasyPermission.svg)](https://jitpack.io/#aidaole/EasyPermission)
+
 这是一个快速请求权限的代码库
 
 我们知道Android中请求权限，需要使用 `ActivityCompat.requestPermissions(activity, permissions, requestCode)` 并且在 `onRequestPermissionsResult`
