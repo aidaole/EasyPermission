@@ -34,9 +34,9 @@ afterEvaluate {
         publications {
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.aidaole'
-                artifactId = 'easypermission'
-                version = '1.0'
+                groupId = 'com.github.aidaole'
+                artifactId = 'lib_easypermission'
+                version = '0.0.9'
             }
         }
     }
