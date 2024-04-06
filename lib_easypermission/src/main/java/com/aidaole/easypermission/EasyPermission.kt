@@ -11,7 +11,6 @@ import android.os.Environment
 import android.provider.Settings
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -66,11 +65,12 @@ object EasyPermission {
      * @receiver
      */
     fun requestPermission(
-        activity: FragmentActivity,
-        text: String,
-        permissions: Array<String>,
+        params: RequestPermissionParams,
         onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
     ) {
+        val activity = params.activity
+        val permissions = params.requestPermissions
+        val descView = params.descView
         val allPermissionGranted = checkPermissions(activity, permissions)
         if (allPermissionGranted) {
             "requestPermission-> 所有权限都有了".logi(TAG)
@@ -105,15 +105,14 @@ object EasyPermission {
         val tag = permissionItem.tag
         val permissionFragment = activity.supportFragmentManager.findFragmentByTag(tag)
         permissionRequests[permissionFragment]!!.requestSystem = true
-
-        val descView = activity.layoutInflater.inflate(R.layout.permission_desc, null, false)
-        descView.findViewById<TextView>(R.id.desc).text = text
-        activity.findViewById<FrameLayout>(android.R.id.content).addView(
-            descView, ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+        descView?.let {
+            activity.findViewById<FrameLayout>(android.R.id.content).addView(
+                descView, ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
             )
-        )
+        }
         val requestCode = Random(1000).nextInt(1000)
         ActivityCompat.requestPermissions(
             activity,
@@ -132,24 +131,26 @@ object EasyPermission {
      * @receiver
      */
     fun requestStoragePermission(
-        activity: FragmentActivity,
-        text: String,
-        requestPermissions: Array<String>,
+        params: RequestPermissionParams,
         onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
     ) {
         "requestStoragePermission-> ".logi(TAG)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             "requestStoragePermission-> api>30 请求所有文件权限".logi(TAG)
             if (!Environment.isExternalStorageManager()) {
-                makeRequestPermissionItem(activity, requestPermissions, onPermissionResult)
+                makeRequestPermissionItem(
+                    params.activity,
+                    params.requestPermissions,
+                    onPermissionResult
+                )
                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                activity.startActivity(intent)
+                params.activity.startActivity(intent)
             } else {
-                onPermissionResult.invoke(requestPermissions,
-                    IntArray(requestPermissions.size).apply { fill(PackageManager.PERMISSION_GRANTED) })
+                onPermissionResult.invoke(params.requestPermissions,
+                    IntArray(params.requestPermissions.size).apply { fill(PackageManager.PERMISSION_GRANTED) })
             }
         } else {
-            requestPermission(activity, text, requestPermissions) { permissions, granted ->
+            requestPermission(params) { permissions, granted ->
                 onPermissionResult.invoke(permissions, granted)
             }
         }
