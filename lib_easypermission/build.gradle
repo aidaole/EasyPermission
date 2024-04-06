@@ -29,11 +29,18 @@ android {
         jvmTarget = '1.8'
     }
 }
+
+task androidSourcesJar(type: Jar) {
+    archiveClassifier.set('sources')
+    from android.sourceSets.main.java.srcDirs
+}
+
 afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
                 from components.release
+                artifact androidSourcesJar
                 groupId = 'com.github.aidaole'
                 artifactId = 'lib_easypermission'
                 version = 'undefined'
