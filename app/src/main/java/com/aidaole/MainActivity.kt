@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.aidaole.easypermission.EasyPermission
 import com.aidaole.easypermission.R
+import com.aidaole.easypermission.RequestDialogParams
 import com.aidaole.easypermission.RequestPermissionParams
 import com.aidaole.easypermission.databinding.ActivityMainBinding
 import com.aidaole.ext.logi
@@ -28,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         layout.storageBtn.setOnClickListener {
             EasyPermission.requestStoragePermission(
                 RequestPermissionParams(
-                    this, null,
+                    this,
                     arrayOf(
                         Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -59,8 +60,8 @@ class MainActivity : AppCompatActivity() {
             EasyPermission.requestPermission(
                 RequestPermissionParams(
                     this,
-                    descView,
-                    arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS)
+                    arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS),
+                    descView
                 )
             ) { permissions, granted ->
                 if (EasyPermission.isAllGranted(permissions, granted)) {
@@ -74,9 +75,16 @@ class MainActivity : AppCompatActivity() {
             val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
             EasyPermission.requestPermission(
                 RequestPermissionParams(
-                    this, null, arrayOf(
+                    this, arrayOf(
                         Manifest.permission.ACCESS_COARSE_LOCATION,
                         Manifest.permission.ACCESS_FINE_LOCATION
+                    ),
+                    null,
+                    RequestDialogParams(
+                        "正在请求地理位置权限",
+                        "这里是地物理位置权限使用说明",
+                        "允许",
+                        "拒绝"
                     )
                 )
             ) { permissions, granted ->

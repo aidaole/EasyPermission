@@ -89,7 +89,7 @@ object EasyPermission {
             }
         }
         if (shouldShowDialog) {
-            showDialog(activity, permissions, ok = {
+            showDialog(activity, params, ok = {
                 openSystemSetting(activity)
             }, cancel = {
                 permissionRequests.findByValue(permissionItem)?.let {
@@ -162,14 +162,25 @@ object EasyPermission {
     }
 
     private fun showDialog(
-        activity: Activity, permissions: Array<String>, ok: () -> Unit, cancel: () -> Unit
+        activity: Activity, params: RequestPermissionParams, ok: () -> Unit, cancel: () -> Unit
     ) {
-        AlertDialog.Builder(activity).setTitle("正在请求权限")
-            .setMessage(permissions.joinToString(","))
-            .setPositiveButton("OK") { dialog, which -> ok.invoke() }
-            .setNegativeButton("Cancel", { dialog, which -> cancel.invoke() })
-            .create()
-            .show()
+        params.dialogParams?.let {
+            AlertDialog.Builder(activity)
+                .setTitle(it.title)
+                .setMessage(it.desc)
+                .setPositiveButton(it.okBtnText) { _, _ -> ok.invoke() }
+                .setNegativeButton(it.cancelBtnText) { _, _ -> cancel.invoke() }
+                .create()
+                .show()
+        } ?: run {
+            AlertDialog.Builder(activity)
+                .setTitle("正在请求权限")
+                .setMessage(params.requestPermissions.joinToString(","))
+                .setPositiveButton("允许") { _, _ -> ok.invoke() }
+                .setNegativeButton("拒绝") { _, _ -> cancel.invoke() }
+                .create()
+                .show()
+        }
     }
 
     fun onResume(fragment: Fragment) {
