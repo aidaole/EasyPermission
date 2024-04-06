@@ -26,10 +26,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(layout.root)
         layout.storageBtn.setOnClickListener {
             EasyPermission.requestStoragePermission(
-                this, 12, "请求storage权限",
+                this, "请求storage权限",
                 arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
             ) { permissions, granted ->
-                if (isAllGranted(permissions, granted)) {
+                if (EasyPermission.isAllGranted(permissions, granted)) {
                     "文件权限-> 获取成功".toast(this)
                 } else {
                     "文件权限-> 获取失败".toast(this)
@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         }
         layout.scanFileBtn.setOnClickListener {
             val hasPermission =
-                com.aidaole.easypermission.EasyPermission.checkPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                EasyPermission.checkPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
             if (hasPermission) {
                 scanFiles()
             } else {
@@ -46,13 +46,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
         layout.callBtn.setOnClickListener {
-            com.aidaole.easypermission.EasyPermission.requestPermission(
+            EasyPermission.requestPermission(
                 this,
-                10,
                 "请求通话和短信权限",
                 arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS)
             ) { permissions, granted ->
-                if (isAllGranted(permissions, granted)) {
+                if (EasyPermission.isAllGranted(permissions, granted)) {
                     "通话权限 获取成功".toast(this)
                 } else {
                     "通话权限 获取失败".toast(this)
@@ -61,14 +60,14 @@ class MainActivity : AppCompatActivity() {
         }
         layout.locationBtn.setOnClickListener {
             val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            com.aidaole.easypermission.EasyPermission.requestPermission(
-                this, 101, "请求地理位置权限",
+            EasyPermission.requestPermission(
+                this, "请求地理位置权限",
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             ) { permissions, granted ->
-                if (isAllGranted(permissions, granted)) {
+                if (EasyPermission.isAllGranted(permissions, granted)) {
                     "locationBtn-> 获取定位权限成功".logi(TAG)
                     if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                         locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)?.let {
@@ -92,17 +91,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun isAllGranted(permissions: Array<out String>, granted: IntArray): Boolean {
-        var allGranted = true
-        granted.forEachIndexed { i, _ ->
-            "isAllGranted-> ${permissions[i]} -> ${granted[i] == PackageManager.PERMISSION_GRANTED}".logi(TAG)
-            if (granted[i] == PackageManager.PERMISSION_DENIED) {
-                allGranted = false
-            }
-        }
-        return allGranted
     }
 
     private fun scanFiles() {

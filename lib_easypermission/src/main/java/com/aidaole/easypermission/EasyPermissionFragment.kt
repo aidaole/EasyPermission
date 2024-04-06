@@ -13,9 +13,4 @@ class EasyPermissionFragment : Fragment() {
         "onResume-> ${this.tag}".logi(TAG)
         EasyPermission.onResume(this)
     }
-
-    override fun onPause() {
-        super.onPause()
-        "onPause-> ${this.tag}".logi(TAG)
-    }
 }

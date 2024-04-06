@@ -17,8 +17,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.aidaole.easypermission.ext.logi
 import com.aidaole.lib.easypermission.R
+import java.util.Random
 import java.util.UUID
 
+/**
+ * 请求权限主体
+ */
 object EasyPermission {
     private const val TAG = "EasyPermission"
 
@@ -33,11 +37,21 @@ object EasyPermission {
      */
     fun checkPermissions(activity: FragmentActivity, permissions: Array<out String>): Boolean {
         val granted = getAllPermissionStates(activity, permissions)
+        return isAllGranted(permissions, granted)
+    }
+
+    /**
+     * 检查是否所有权限都是授予
+     */
+    fun isAllGranted(permissions: Array<out String>, granted: IntArray): Boolean {
         var allPermissionGranted = true
         granted.forEach {
             if (it != PackageManager.PERMISSION_GRANTED) {
                 allPermissionGranted = false
             }
+        }
+        permissions.forEachIndexed { i, permission ->
+            "checkPermissions: $permission -> ${granted[i]}".logi(TAG)
         }
         return allPermissionGranted
     }
@@ -46,7 +60,6 @@ object EasyPermission {
      * 请求权限
      *
      * @param activity
-     * @param requestCode
      * @param text
      * @param permissions
      * @param onPermissionResult
@@ -54,7 +67,6 @@ object EasyPermission {
      */
     fun requestPermission(
         activity: FragmentActivity,
-        requestCode: Int,
         text: String,
         permissions: Array<String>,
         onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
@@ -70,13 +82,13 @@ object EasyPermission {
 
         val permissionItem = makeRequestPermissionItem(activity, permissions, onPermissionResult)
 
-        var showShowDialog = false
+        var shouldShowDialog = false
         permissions.forEach {
             if (ActivityCompat.shouldShowRequestPermissionRationale(activity, it)) {
-                showShowDialog = true
+                shouldShowDialog = true
             }
         }
-        if (showShowDialog) {
+        if (shouldShowDialog) {
             showDialog(activity, permissions, ok = {
                 openSystemSetting(activity)
             }, cancel = {
@@ -102,14 +114,18 @@ object EasyPermission {
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
         )
-        ActivityCompat.requestPermissions(activity, permissions, requestCode)
+        val requestCode = Random(1000).nextInt(1000)
+        ActivityCompat.requestPermissions(
+            activity,
+            permissions,
+            requestCode
+        )
     }
 
     /**
      * 请求sdcard权限，这个比较特殊，需要适配
      *
      * @param activity
-     * @param requestCode
      * @param text
      * @param requestPermissions
      * @param onPermissionResult
@@ -117,7 +133,6 @@ object EasyPermission {
      */
     fun requestStoragePermission(
         activity: FragmentActivity,
-        requestCode: Int,
         text: String,
         requestPermissions: Array<String>,
         onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
@@ -134,9 +149,7 @@ object EasyPermission {
                     IntArray(requestPermissions.size).apply { fill(PackageManager.PERMISSION_GRANTED) })
             }
         } else {
-            requestPermission(
-                activity, requestCode, text, requestPermissions
-            ) { permissions, granted ->
+            requestPermission(activity, text, requestPermissions) { permissions, granted ->
                 onPermissionResult.invoke(permissions, granted)
             }
         }
@@ -150,7 +163,8 @@ object EasyPermission {
     private fun showDialog(
         activity: Activity, permissions: Array<String>, ok: () -> Unit, cancel: () -> Unit
     ) {
-        AlertDialog.Builder(activity).setTitle("正在请求权限").setMessage(permissions.joinToString(","))
+        AlertDialog.Builder(activity).setTitle("正在请求权限")
+            .setMessage(permissions.joinToString(","))
             .setPositiveButton("OK") { dialog, which -> ok.invoke() }
             .setNegativeButton("Cancel", { dialog, which -> cancel.invoke() })
             .create()
@@ -162,7 +176,8 @@ object EasyPermission {
             removePermissionDescView(fragment)
             "onResume-> 删除fragmetn: ${fragment.tag}".logi(TAG)
             permissionRequests.remove(fragment)
-            fragment.requireActivity().supportFragmentManager.beginTransaction().remove(fragment).commit()
+            fragment.requireActivity().supportFragmentManager.beginTransaction().remove(fragment)
+                .commit()
             it.onPermissionResult.invoke(
                 it.permissions, getAllPermissionStates(fragment.requireActivity(), it.permissions)
             )
@@ -183,7 +198,10 @@ object EasyPermission {
         activity.startActivity(intent)
     }
 
-    private fun getAllPermissionStates(activity: FragmentActivity, permissions: Array<out String>): IntArray {
+    private fun getAllPermissionStates(
+        activity: FragmentActivity,
+        permissions: Array<out String>
+    ): IntArray {
         val granted = IntArray(permissions.size)
         permissions.forEachIndexed { index, permission ->
             when (permission) {
