@@ -7,19 +7,31 @@
 我们知道Android中请求权限，需要使用 `ActivityCompat.requestPermissions(activity, permissions, requestCode)` 并且在 `onRequestPermissionsResult`
 中根据 `requestCode` 判断是哪个权限请求来做响应，不仅写起来很麻烦，并且多个业务都需要合并在一起处理，到时代码逻辑不清晰。
 
-此库提供 EasyPermission，直接请求权限，提供**回调方式**直接将权限请求结果返回，并且适配了**首次权限请求**，**拒绝过自行弹窗**，**增加顶部权限说明框**，**页面跳转和小窗请求权限**等
+此库提供 EasyPermission，直接请求权限，提供:
+**回调方式**直接将权限请求结果返回，并且适配了
+**andorid30以上文件权限请求接口**
+**首次权限请求**
+**拒绝过自行弹窗**
+**增加顶部权限说明框**
+**页面跳转和小窗请求权限**
+
 使用起来非常方便。举个例子：
 
-这里我们请求通话和短信权限
+## 请求文件权限
+
+
+## 请求带顶部弹窗的权限
 
 ```kotin
+val descView = layoutInflater.inflate(R.layout.permission_desc, layout.root, false)
 EasyPermission.requestPermission(
-    this,
-    REQUEST_CALL_CODE,
-    "请求通话和短信权限",
-    arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS)
+    RequestPermissionParams(
+        this,
+        arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS),
+        descView
+    )
 ) { permissions, granted ->
-    if (isAllGranted(permissions, granted)) {
+    if (EasyPermission.isAllGranted(permissions, granted)) {
         "通话权限 获取成功".toast(this)
     } else {
         "通话权限 获取失败".toast(this)
@@ -28,14 +40,22 @@ EasyPermission.requestPermission(
 ```
 只需要在回调中，判断是否两个权限都授予即可，是不是非常方便。
 
+
+## 请求文件权限
+
 android对文件权限有很大改动，在api 30以上需要所有文件权限，这里对外部存储权限也做了对应的适配
 
 ```kotlin
 EasyPermission.requestStoragePermission(
-    this, REQUEST_STORAGE_CODE, "请求storage权限",
-    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    RequestPermissionParams(
+        this,
+        arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+    )
 ) { permissions, granted ->
-    if (isAllGranted(permissions, granted)) {
+    if (EasyPermission.isAllGranted(permissions, granted)) {
         "文件权限-> 获取成功".toast(this)
     } else {
         "文件权限-> 获取失败".toast(this)
@@ -43,32 +63,46 @@ EasyPermission.requestStoragePermission(
 }
 ```
 
-框架中会根据不同的android sdk使用不同的方法来判断是否有正确的权限
+## 请求被拒绝自定义弹窗
+
 ```kotlin
-fun requestStoragePermission(
-    activity: FragmentActivity,
-    requestCode: Int,
-    text: String,
-    requestPermissions: Array<String>,
-    onPermissionResult: (permissions: Array<out String>, granted: IntArray) -> Unit
-) {
-    "requestStoragePermission-> ".logi(TAG)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        "requestStoragePermission-> api>30 请求所有文件权限".logi(TAG)
-        if (!Environment.isExternalStorageManager()) {
-            makeRequestPermissionItem(activity, requestPermissions, onPermissionResult)
-            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-            activity.startActivity(intent)
-        } else {
-            onPermissionResult.invoke(requestPermissions,
-                IntArray(requestPermissions.size).apply { fill(PackageManager.PERMISSION_GRANTED) })
+EasyPermission.requestPermission(
+    RequestPermissionParams(
+        this, arrayOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ),
+        null,
+        RequestDialogParams(
+            "正在请求地理位置权限",
+            "这里是地物理位置权限使用说明",
+            "允许",
+            "拒绝"
+        )
+    )
+) { permissions, granted ->
+    if (EasyPermission.isAllGranted(permissions, granted)) {
+        "locationBtn-> 获取定位权限成功".logi(TAG)
+        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                ?.let {
+                    val latitude = it.latitude
+                    val longitude = it.longitude
+                    "locationBtn-> 地理位置: ${latitude}, $longitude".toast(this)
+                } ?: run {
+                locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    1000,
+                    1F
+                ) {
+                    val latitude = it.latitude
+                    val longitude = it.longitude
+                    "locationBtn-> 地理位置: ${latitude}, $longitude".toast(this)
+                }
+            }
         }
     } else {
-        requestPermission(
-            activity, requestCode, text, requestPermissions
-        ) { permissions, granted ->
-            onPermissionResult.invoke(permissions, granted)
-        }
+        "locationBtn-> 没有权限".toast(this)
     }
 }
 ```
