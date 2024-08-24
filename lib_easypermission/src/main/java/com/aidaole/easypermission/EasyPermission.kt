@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.app.ActivityCompat
@@ -37,6 +38,18 @@ object EasyPermission {
     fun checkPermissions(activity: FragmentActivity, permissions: Array<out String>): Boolean {
         val granted = getAllPermissionStates(activity, permissions)
         return isAllGranted(permissions, granted)
+    }
+
+    /**
+     * 检查单个权限是否授予
+     *
+     * @param activity
+     * @param permission
+     * @return
+     */
+    fun checkPermission(activity: FragmentActivity, permission: String): Boolean {
+        val granted = ActivityCompat.checkSelfPermission(activity, permission)
+        return granted == PackageManager.PERMISSION_GRANTED
     }
 
     /**
@@ -71,6 +84,7 @@ object EasyPermission {
         val activity = params.activity
         val permissions = params.requestPermissions
         val descView = params.descView
+
         val allPermissionGranted = checkPermissions(activity, permissions)
         if (allPermissionGranted) {
             "requestPermission-> 所有权限都有了".logi(TAG)
@@ -81,14 +95,15 @@ object EasyPermission {
         }
 
         val permissionItem = makeRequestPermissionItem(activity, permissions, onPermissionResult)
-
-        var shouldShowDialog = false
-        permissions.forEach {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, it)) {
-                shouldShowDialog = true
+        var systemPermissionWillShow = false
+        permissions.filterNot { checkPermission(activity, it) }.forEach {
+            Log.d(TAG, "requestPermission: ${it}, willshow: ${SystemPermissionDialogHelper.getSystemDialogWillShow(activity, it)}")
+            if (SystemPermissionDialogHelper.getSystemDialogWillShow(activity, it)) {
+                systemPermissionWillShow = true
             }
         }
-        if (shouldShowDialog) {
+        Log.d(TAG, "requestPermission: ${systemPermissionWillShow}")
+        if (!systemPermissionWillShow) {
             showDialog(activity, params, ok = {
                 openSystemSetting(activity)
             }, cancel = {
@@ -186,10 +201,14 @@ object EasyPermission {
     fun onResume(fragment: Fragment) {
         permissionRequests[fragment]?.let {
             removePermissionDescView(fragment)
-            "onResume-> 删除fragmetn: ${fragment.tag}".logi(TAG)
+            "onResume-> 删除fragment: ${fragment.tag}".logi(TAG)
             permissionRequests.remove(fragment)
             fragment.requireActivity().supportFragmentManager.beginTransaction().remove(fragment)
                 .commit()
+            SystemPermissionDialogHelper.writeSystemDialogWillShowNextTime(
+                fragment.requireActivity(),
+                it.permissions, getAllPermissionStates(fragment.requireActivity(), it.permissions)
+            )
             it.onPermissionResult.invoke(
                 it.permissions, getAllPermissionStates(fragment.requireActivity(), it.permissions)
             )
