@@ -8,27 +8,22 @@
 中根据 `requestCode` 判断是哪个权限请求来做响应，不仅写起来很麻烦，并且多个业务都需要合并在一起处理，到时代码逻辑不清晰。
 
 此库提供 EasyPermission，直接请求权限，提供:
-**回调方式**直接将权限请求结果返回，并且适配了
+**回调方式, 直接将权限请求结果返回**
+**适配国内安全需求, 增加顶部权限说明框**
+**适配HMOV等系统的权限请求拒绝策略, 首次权限请求, 拒绝不再弹出后自动弹窗引导**
 **andorid30以上文件权限请求接口**
-**首次权限请求**
-**拒绝过自行弹窗**
-**增加顶部权限说明框**
-**页面跳转和小窗请求权限**
 
 使用起来非常方便。举个例子：
 
-## 请求文件权限
-
-
-## 请求带顶部弹窗的权限
+## 请求PHONE_STATE, READ_SMS带顶部弹窗的权限
 
 ```kotin
-val descView = layoutInflater.inflate(R.layout.permission_desc, layout.root, false)
+val topView = layoutInflater.inflate(R.layout.permission_desc, layout.root, false)
 EasyPermission.requestPermission(
     RequestPermissionParams(
         this,
         arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS),
-        descView
+        topView
     )
 ) { permissions, granted ->
     if (EasyPermission.isAllGranted(permissions, granted)) {
@@ -39,6 +34,8 @@ EasyPermission.requestPermission(
 }
 ```
 只需要在回调中，判断是否两个权限都授予即可，是不是非常方便。
+
+![](images/2024-11-24-12-31-54.png ':size=300')
 
 
 ## 请求文件权限
@@ -106,3 +103,5 @@ EasyPermission.requestPermission(
     }
 }
 ```
+
+![](images/2024-11-24-13-20-57.png ':size=300')
